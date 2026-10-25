@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio de la Línea Recta</title>
+<style>
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:linear-gradient(135deg,#2c3e50,#3498db);min-height:100vh;margin:0;padding:20px}
+.contenedor{background:#fff;max-width:700px;margin:0 auto;padding:20px;border-radius:15px}
+h1{text-align:center;color:#2c3e50;font-size:22px}
+.instruccion{text-align:center;color:#555;margin-bottom:20px}
+.seccion-entrada{background:#f8f9fa;padding:15px;border-radius:10px;margin-bottom:15px}
+input{width:80px;padding:8px;margin:5px;border:2px solid #3498db;border-radius:5px;font-size:16px}
+button{background:#3498db;color:#fff;border:none;padding:10px 20px;font-size:16px;border-radius:5px;margin:5px;cursor:pointer}
+button:hover{background:#2980b9}
+#errores{background:#ffebee;color:#c62828;padding:10px;border-radius:5px;display:none;margin:10px 0}
+#resultados{background:#e8f5e9;padding:15px;border-radius:10px;display:none;margin:15px 0}
+.grafica{background:#fff;padding:10px;border-radius:10px;border:1px solid #ccc;margin-top:20px}
+canvas{display:block;margin:0 auto;background:#fafafa;border:1px solid #ccc;max-width:100%}
+</style>
+</head>
+<body>
+<div class="contenedor">
+<h1>📐 Laboratorio de la Línea Recta</h1>
+<p class="instruccion">Ingresa dos puntos y pulsa Calcular</p>
+
+<div class="seccion-entrada">
+<h3>📍 Punto A</h3>
+X₁: <input type="number" id="x1">
+Y₁: <input type="number" id="y1">
+
+<h3>📍 Punto B</h3>
+X₂: <input type="number" id="x2">
+Y₂: <input type="number" id="y2">
+
+<br><br>
+<button onclick="calcular()">✨ Calcular</button>
+<button onclick="limpiar()">🗑️ Limpiar</button>
+</div>
+
+<div id="errores"></div>
+<div id="resultados"></div>
+
+<div class="grafica">
+<h3 style="text-align:center;font-size:16px;color:#555">📈 Gráfica</h3>
+<canvas id="plano" width="400" height="400"></canvas>
+</div>
+</div>
+
+<script>
+function calcular(){
+const x1=document.getElementById('x1').value;
+const y1=document.getElementById('y1').value;
+const x2=document.getElementById('x2').value;
+const y2=document.getElementById('y2').value;
+const err=document.getElementById('errores');
+const res=document.getElementById('resultados');
+err.style.display='none';
+res.style.display='none';
+if(!x1!y1!x2||!y2){err.style.display='block';err.innerHTML='⚠️ Completa todos los campos';return}
+const X1=parseFloat(x1),Y1=parseFloat(y1),X2=parseFloat(x2),Y2=parseFloat(y2);
+if(isNaN(X1)isNaN(Y1)isNaN(X2)||isNaN(Y2)){err.style.display='block';err.innerHTML='⚠️ Usa solo números';return}
+if(X1===X2&&Y1===Y2){err.style.display='block';err.innerHTML='⚠️ Los puntos no pueden ser iguales';return}
+
+let tipo='',m='',b='',ecu='',intY='',intX='';
+
+if(X1===X2){
+tipo='VERTICAL';
+m='No definida';
+ecu='x = '+X1;
+intY='No corta eje Y';
+intX='('+X1+', 0)';
+}else if(Y1===Y2){
+tipo='HORIZONTAL';
+m='0';
+ecu='y = '+Y1;
+intY='(0, '+Y1+')';
+intX='Paralela al eje X';
+}else{
+tipo='Inclinada';
+m=(Y2-Y1)/(X2-X1);
+b=Y1-m*X1;
+ecu='y = '+m.toFixed(2)+'x + ('+b.toFixed(2)+')';
+intY='(0, '+b.toFixed(2)+')';
+const cx=-b/m;
+intX='('+cx.toFixed(2)+', 0)';
+}
+
+res.style.display='block';
+res.innerHTML='<h4>✅ Resultados</h4>'+
+'<p><strong>Punto A:</strong> ('+X1+', '+Y1+')</p>'+
+'<p><strong>Punto B:</strong> ('+X2+', '+Y2+')</p>'+
+'<p><strong>Tipo:</strong> '+tipo+'</p>'+
+'<p><strong>Pendiente m =</strong> '+m+'</p>'+
+'<p><strong>Ecuación:</strong> '+ecu+'</p>'+
+'<p><strong>Intercepto Y:</strong> '+intY+'</p>'+
+'<p><strong>Intercepto X:</strong> '+intX+'</p>';
+
+dibujar(X1,Y1,X2,Y2,tipo,m,b);
+}
+
+function limpiar(){
+document.getElementById('x1').value='';
+document.getElementById('y1').value='';
+document.getElementById('x2').value='';
+document.getElementById('y2').value='';
+document.getElementById('errores').style.display='none';
+document.getElementById('resultados').style.display='none';
+dibujarEjes();
+}
+  function dibujar(x1,y1,x2,y2,tipo,m,b){
+const c=document.getElementById('plano');
+const ctx=c.getContext('2d');
+const cen=200,esc=20;
+function px(u){return cen+u*esc}
+function py(u){return cen-u*esc}
+ctx.clearRect(0,0,400,400);
+dibujarEjes();
+
+ctx.fillStyle='#e74c3c';
+ctx.beginPath();ctx.arc(px(x1),py(y1),5,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#000';ctx.font='12px Arial';ctx.fillText('A',px(x1)+6,py(y1)-6);
+
+ctx.fillStyle='#2ecc71';
+ctx.beginPath();ctx.arc(px(x2),py(y2),5,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#000';ctx.fillText('B',px(x2)+6,py(y2)-6);
+
+ctx.strokeStyle='#3498db';ctx.lineWidth=2;ctx.beginPath();
+if(tipo==='VERTICAL'){
+ctx.moveTo(px(x1),0);ctx.lineTo(px(x1),400);
+}else{
+let yi,yd;
+if(tipo==='HORIZONTAL'){yi=y1;yd=y1;}
+else{yi=m*(-9)+b;yd=m*9+b;}
+ctx.moveTo(px(-9),py(yi));ctx.lineTo(px(9),py(yd));
+}
+ctx.stroke();
+}
+
+function dibujarEjes(){
+const c=document.getElementById('plano');
+const ctx=c.getContext('2d');
+const cen=200,esc=20;
+ctx.fillStyle='#fafafa';ctx.fillRect(0,0,400,400);
+ctx.strokeStyle='#eee';ctx.lineWidth=1;
+for(let i=-9;i<=9;i++){
+ctx.beginPath();ctx.moveTo(cen+i*esc,0);ctx.lineTo(cen+i*esc,400);ctx.stroke();
+ctx.beginPath();ctx.moveTo(0,cen+i*esc);ctx.lineTo(400,cen+i*esc);ctx.stroke();
+}
+ctx.strokeStyle='#333';ctx.lineWidth=2;
+ctx.beginPath();ctx.moveTo(0,cen);ctx.lineTo(400,cen);ctx.moveTo(cen,0);ctx.lineTo(cen,400);ctx.stroke();
+ctx.font='11px Arial';ctx.fillText('X',380,cen+15);ctx.fillText('Y',cen+8,15);
+}
+
+window.onload=dibujarEjes;
+</script>
+</body>
+</html>
